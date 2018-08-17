@@ -1,0 +1,31 @@
+@import '../../styles/variable.less';
+
+.wrapper {
+  background-color: @bg-color;
+  height: 100vh;
+  padding: 50px 20px;
+  .counter {
+    margin-top: 5vh;
+    & > h1 {
+      text-align: center;
+      background-image: -webkit-linear-gradient(left,#D81159, #E53A40 10%, #FFBC42 20%, #75D701 30%, #30A9DE 40%,#D81159 50%, #E53A40 60%, #FFBC42 70%, #75D701 80%, #30A9DE 90%,#D81159);
+      color:transparent;
+      -webkit-background-clip: text;
+      background-size: 200%;
+      animation: flowlight 5s linear infinite;
+    }
+    & > div {
+      text-align: center;
+      margin-top: 5vh;
+      a {
+        display: inline-block;
+        padding:8px 24px;
+        background-color: @btn-bg-color;
+        margin: 10px;
+        border-radius: 4px;
+        color: #fff;
+        cursor: pointer;
+      }
+    }
+  }
+}

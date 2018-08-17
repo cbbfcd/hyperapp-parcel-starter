@@ -1,10 +1,10 @@
-# 🚀 hyperapp 分析
+# 🚀 ✈️ 🇧🇷 hyperapp 分析
 
 > 1 kB JavaScript micro-framework for building web applications -- [hyperapp](https://github.com/hyperapp/hyperapp)
 
 最吸引人的就是这句介绍了。
 
-# 🔥 hyperapp 文档
+# 🔥 🇪🇸 hyperapp 文档
 
 原文见[官方文档](https://github.com/hyperapp/hyperapp)
 
@@ -19,7 +19,7 @@ Hyperapp 只有两个最重要的 API:
 - h: 用于处理 view，返回 Virtual DOM 节点
 - app: 用于将一个应用程序挂载到特定的 DOM 元素上，也可以不指定 DOM 元素（这将利于测试）
 
-## ❤️ h
+## ❤️ 🔥 h
 
 文档中使用了 jsx，需要安装插件将 jsx 编译成 h 函数能够处理的样子。
 
@@ -57,7 +57,7 @@ const view = (state, actions) =>
 
 事实上并不是一定要 jsx 的，你直接写 h 函数结构也能顺利得到一个 v-DOM 结构。也可以用其他任务的语法模版。
 
-## 🚴‍♀️ app
+## 🚴‍♀️ 🚢 app
 
 Hyperapp 应用程序主要的三板斧还是 state, actions, view。React 用户似乎对这个很熟悉...
 
@@ -66,7 +66,7 @@ Hyperapp 应用程序主要的三板斧还是 state, actions, view。React 用�
 
 妥妥的单向数据流！
 
-### 🀄️ state
+### 🀄️ 🍲 state
 
 简单的说就是一个 plain object，必须通过 actions 来改变它。
 
@@ -96,7 +96,7 @@ const actions = {
 }
 ```
 
-### 👧 actions
+### 👧 🌧️ actions
 
 同 Redux 很像。
 
@@ -112,17 +112,42 @@ const actions = {
 同 redux 一样，状态的更新应该是 immutable 的，就是不要在 actions 直接改变 state, 而是返回一个新的状态，这对时间旅行调试很有用，
 也能避免一些难以追踪的异常。
 
-#### 🐟 异步 actions
+#### 🐟 😢 异步 actions
 
 用于副作用的操作（写入数据库，向服务器发送请求等）不需要具有返回值。 
 
 你可以从另一个 action 或回调函数中调用操作。 返回 Promise，undefined 或 null 的操作不会触发重绘或更新状态。
 
+直白的说就是你可以随便整，返回一个 promise 啥的又不会引起重绘，异步最终也是要拿到数据的，这时候你再调用另一个 action 完成状态更新就好了。
 
+```js
+const actions = {
+  upLater: () => async(state, actions) => {
+    const { data } = await this.fetch('xxxx')
+    actions.up(data)
+  },
+  up: value => state => ({ count: state.count + value })
+}
+```
+#### 🐘 🐰 嵌套 actions
 
-### 🐒 view
+这个在嵌套的状态树已经提过了
 
-## 🐍 react
+#### 🐷 🐎 交互
+
+app 函数将会返回一个有所有定义的 actions 属性的副本。
+
+将这个对象暴露给外界（部），对于从其他程序或框架操作应用程序，订阅全局事件，监听鼠标和键盘输入等非常有用(对于测试的时候也很有用处哦❕笔芯)。
+
+```js
+const main = app(state, actions, view, document.body)
+main.up()
+main.down()
+```
+
+### 🐒 🍑 view
+
+## 🐍 🐛 react
 
 与 React 做一个简单粗暴的对比：
 
@@ -136,7 +161,7 @@ import { h, app } from 'hyperapp'
 app(state, actions, view, document.getElementById('root'))
 ```
 
-# ✈️ 脚手架
+# ✈️ 🦃️ 脚手架
 
 这是一个基于 parcel + typescript + hyperapp + pwa 的脚手架, 正在视图使其支持 antd、数据流、路由等常规配置。
 

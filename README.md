@@ -145,6 +145,14 @@ main.up()
 main.down()
 ```
 
+包含一个直接返回原 state 的 actions 有时候会有一定的用处(类似于 redux 中的 store.getState())，毕竟不会引起重绘呀😂😂
+
+```js
+const actions = {
+  getState: () => state => state
+}
+```
+
 ### 🐒 🍑 view
 
 ## 🐍 🐛 react

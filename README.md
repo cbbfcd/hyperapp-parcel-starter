@@ -7,9 +7,9 @@ more about [hyperapp](https://hyperapp.js.org/), [parcel](https://parceljs.org/g
 
 # features
 
-. [x] TypeScript
-. [x] CSS/Less/Sass(need add node-sass)
-. [x] PWA(sw-precache)
+. [ x ]TypeScript
+. [ x ]CSS/Less/Sass(need add node-sass)
+. [ x ]PWA(sw-precache)
 . [x] Parcel
 . [x] Tslint
 . [x] jest

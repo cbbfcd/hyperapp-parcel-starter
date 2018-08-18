@@ -6,18 +6,18 @@
 
 # 🔥 🇪🇸 hyperapp 文档
 
-原文见[官方文档](https://github.com/hyperapp/hyperapp)
+[👮‍♀️官方文档](https://github.com/hyperapp/hyperapp)
 
-这里我简单的介绍一下：
+这里我通俗易懂的、简单的介绍一下（我很多地方都引用了 React 做粗暴的比较）：
 
-* Minimal -- 我们积极地将您需要理解的概念最小化，以提高工作效率，同时保持与其他框架相同的功能。
-* Pragmatic -- 在管理你的状态的时候可以采用务实的办法，允许副作用、异步操作和 DOM 操作。
-* Standalone -- 同样支持牛逼的 virtual DOM 来用更小的代价管理状态、渲染视图，有简单的生命周期和基于 key 标识的节点更新
+* 🔥 Minimal -- 我们积极地将您需要理解的概念最小化，以提高工作效率，同时保持与其他框架相同的功能。
+* 🔥 Pragmatic -- 在管理你的状态的时候可以采用务实的办法，允许副作用、异步操作和 DOM 操作。
+* 🔥 Standalone -- 同样支持牛逼的 virtual DOM 来用更小的代价管理状态、渲染视图，有简单的生命周期和基于 key 标识的节点更新
 
 Hyperapp 只有两个最重要的 API:
 
-- h: 用于处理 view，返回 Virtual DOM 节点(后续都以 v-DOM 代表虚拟 DOM 技术)
-- app: 用于将一个应用程序挂载到特定的 DOM 元素上，也可以不指定 DOM 元素（这将利于测试）
+- 🚀 h: 用于处理 view，返回 Virtual DOM 节点(后续都以 v-DOM 代表虚拟 DOM 技术)
+- 🚀 app: 用于将一个应用程序挂载到特定的 DOM 元素上，也可以不指定 DOM 元素（这将利于测试）
 
 ## ❤️ 🔥 h
 
@@ -55,7 +55,7 @@ const view = (state, actions) =>
 }
 ```
 
-事实上并不是一定要 jsx 的，你直接写 h 函数结构也能顺利得到一个 v-DOM 结构。也可以用其他任务的语法模版。
+⚠️事实上并不是一定要 jsx 的，你直接写 h 函数结构也能顺利得到一个 v-DOM 结构。也可以用其他任务的语法模版。
 
 ## 🚴‍♀️ 🚢 app
 
@@ -116,7 +116,7 @@ const actions = {
 
 用于副作用的操作（写入数据库，向服务器发送请求等）不需要具有返回值。 
 
-你可以从另一个 action 或回调函数中调用操作。 返回 Promise，undefined 或 null 的操作不会触发重绘或更新状态。
+⚠️你可以从另一个 action 或回调函数中调用操作。 返回 Promise，undefined 或 null 的操作不会触发重绘或更新状态。
 
 直白的说就是你可以随便整，返回一个 promise 啥的又不会引起重绘，异步最终也是要拿到数据的，这时候你再调用另一个 action 完成状态更新就好了。
 
@@ -208,7 +208,7 @@ Hyperapp 在内存中保存了两颗 v-DOM 树，目的也是为了避免每次�
 
 ### 🔥 🌞 Mounting
 
-要在页面中安装应用程序，我们需要一个DOM元素。 此元素称为应用程序容器。 使用Hyperapp构建的应用程序始终只有一个容器。
+要在页面中安装应用程序，我们需要一个 DOM 元素。 此元素称为应用程序容器。 使用 Hyperapp 构建的应用程序始终只有一个容器。
 
 ```js
 app(state, actions, view, container)
@@ -218,7 +218,228 @@ Hyperapp还将尝试重用容器内的现有元素，从而实现 SEO 优化并�
 
 当然 Hyperapp 是支持 SSR 的！😄😄😄
 
+### 🍇 🏠 Components
 
+组件大家应该非常的熟悉了，是一个返回虚拟节点的纯函数（对于纯函数概念不太熟悉的童鞋参见 Redux 中的说明）。
+
+组件是可以复用的对样式、属性、行为的封装体而已。玩儿的6⃣️的话，代码会很清晰，维护起来方便。
+
+```js
+import { h } from "hyperapp"
+
+const TodoItem = ({ id, value, done, toggle }) => (
+  <li
+    class={done && "done"}
+    onclick={() =>
+      toggle({
+        value: done,
+        id: id
+      })
+    }
+  >
+    {value}
+  </li>
+)
+
+export const view = (state, actions) => (
+  <div>
+    <h1>Todo</h1>
+    <ul>
+      {state.todos.map(({ id, value, done }) => (
+        <TodoItem id={id} value={value} done={done} toggle={actions.toggle} />
+      ))}
+    </ul>
+  </div>
+)
+```
+
+#### 🚠 🇫🇯 Lazy Components
+
+上面的例子中的 TodoItem 组件就是万千普通组件中的一员，只能从父组件接收属性和子项。当然，如果一个组件需要接收全局的 state or actions，那么可以试试🔥惰性组件🔥。
+
+🔥惰性组件🔥的实现其实也很简单，就是利用函数的柯里化，返回的是一个以 state 和 actions 为参数的函数。
+
+```js
+import { h } from "hyperapp"
+
+export const Up = ({ by }) => (state, actions) => (
+  <button onclick={() => actions.up(by)}>+ {by}</button>
+)
+
+export const Down = ({ by }) => (state, actions) => (
+  <button onclick={() => actions.down(by)}>- {by}</button>
+)
+
+export const Double = () => (state, actions) => (
+  <button onclick={() => actions.up(state.count)}>+ {state.count}</button>
+)
+
+export const view = (state, actions) => (
+  <main>
+    <h1>{state.count}</h1>
+    <Up by={2} />
+    <Down by={1} />
+    <Double />
+  </main>
+)
+```
+
+#### 👦 🧒 Children Composition
+
+组件通过第二个参数接收子元素，允许你和其他组件将任意子组件传递给它们。
+
+```js
+const Box = ({ color }, children) => (
+  <div class={`box box-${color}`}>{children}</div>
+)
+
+const HelloBox = ({ name }) => (
+  <Box color="green">
+    <h1 class="title">Hello, {name}!</h1>
+  </Box>
+)
+```
+
+## 📖 🌈 Supported Attributes
+
+支持的属性包括 HTML 属性，SVG 属性，DOM 事件，生命周期事件和 Keys。 ⚠️请注意，不支持非标准 HTML 属性名称，onclick 和 class 有效，但 onClick 或 className 不支持。
+
+你看我脚手架中怎么又是用的 className, onClick 呢？那是 JSX ❕
+
+### 🈵️ 1⃣️ Styles
+
+这个 React 用户懂的！ 对象、驼峰...
+
+### 🚴 🚚 Lifecycle Events
+
+同样生命周期的概念都已经烂大街了，Hyperapp 👍 有更简单的生命周期(可以方便你更加好的完成各种骚操作)。
+
+Hyperapp 中通过生命周期事件实现对 v-DOM 的更新、创建、删除等，从而实现诸如 1⃣️ 获取数据、 2⃣️ 动画、 3⃣️ 清理资源、 4⃣️ 封装三方库等骚操作。
+
+⚠️ 生命周期操作的是 v-DOM，并不是组件本身。这里需要考虑加一个🔑 key 保证我们的事件是绑定到特定的 DOM 元素的。不要乱了套🦆！
+
+#### 1⃣️ 🌈 oncreate
+
+这个事件的触发时机是（⚠️element is created and attached to the DOM）总感觉中文我说不清楚这个感觉。粗暴类比于 React 中的 ComponentDidMount 吧！
+
+直白的说就是 v-DOM 在 patch 操作后再挂载到 DOM 容器后这个时间点。
+
+也就是这个生命周期中是可以直接操作 DOM 的，这里可以处理动画的淡入淡出、网络请求之类的（React 用户很懂）。
+
+~~这里没有 onWillCreate 难道是提前想到了 Fiber 也会干掉这个？~~
+
+```js
+import { h } from "hyperapp"
+
+export const Textbox = ({ placeholder }) => (
+  <input
+    type="text"
+    placeholder={placeholder}
+    oncreate={element => element.focus()}
+  />
+)
+```
+
+#### 2⃣️ 🌈 onupdate
+
+每次更新元素属性时都会触发此事件。 在事件处理程序中使用 oldAttributes 来检查是否有任何属性发生了变化。
+
+强行凑合着当 getDerivedStateFromProps 用❓❓
+
+```js
+import { h } from "hyperapp"
+
+export const Textbox = ({ placeholder }) => (
+  <input
+    type="text"
+    placeholder={placeholder}
+    onupdate={(element, oldAttributes) => {
+      if (oldAttributes.placeholder !== placeholder) {
+        // Handle changes here!
+      }
+    }}
+  />
+)
+```
+
+#### 3⃣️ 🌈 onremove
+
+在从 DOM 中删除元素 *之前* 👈 触发此事件。 用它来创建幻灯片/淡出动画。 
+
+⚠️ 在函数内部调用以删除元素。 不会在其子元素中调用此事件。
+
+```js
+import { h } from "hyperapp"
+
+export const MessageWithFadeout = ({ title }) => (
+  <div onremove={(element, done) => fadeout(element).then(done)}>
+    <h1>{title}</h1>
+  </div>
+)
+```
+
+#### 4⃣️ 🌈 ondestroy
+
+在从 DOM 中删除元素 *之后* 👈 直接（或由于父项被删除从而）触发此事件。 用它来使计时器无效，取消网络请求，删除全局事件监听器等。
+
+就像 componentWillUnMount ❓❓
+
+```js
+import { h } from "hyperapp"
+
+export const Camera = ({ onerror }) => (
+  <video
+    poster="loading.png"
+    oncreate={element => {
+      navigator.mediaDevices
+        .getUserMedia({ video: true })
+        .then(stream => (element.srcObject = stream))
+        .catch(onerror)
+    }}
+    ondestroy={element => element.srcObject.getTracks()[0].stop()}
+  />
+)
+```
+
+### 🔑 🚪 keys
+
+每次更新DOM时，Keys 都有助于识别节点。 通过在虚拟节点上设置 key 属性，可以声明该节点应该对应于特定的 DOM 元素。 
+
+如果位置发生变化，这允许我们将元素重新排序到新位置，而不是冒险破坏它。
+
+```js
+import { h } from "hyperapp"
+
+export const ImageGallery = ({ images }) =>
+  images.map(({ hash, url, description }) => (
+    <li key={hash}>
+      <img src={url} alt={description} />
+    </li>
+  ))
+```
+
+⚠️ 键必须在兄弟节点中是唯一的。 如果索引还指定了兄弟节点的顺序，请不要将数组索引用作键。 
+
+⚠️ 如果列表中项目的位置和数量是固定的，则没有区别，但如果列表是动态的，则每次重建树时 key 都会更改。
+
+```js
+import { h } from "hyperapp"
+
+export const PlayerList = ({ players }) =>
+  players
+    .slice()
+    .sort((player, nextPlayer) => nextPlayer.score - player.score)
+    .map(player => (
+      <li key={player.username} class={player.isAlive ? "alive" : "dead"}>
+        <PlayerProfile {...player} />
+      </li>
+    ))
+```
+❕ ❕ ⚠️ 密钥未在视图的顶级节点上注册。 如果要切换顶级视图，并且必须使用密钥，请将它们包装在不变的节点中。
+
+# 🌈 🌈 源码分析
+
+[你进来啊❕](./docs/hyperapp-note.js)
 
 ## 🐍 🐛 react
 
@@ -234,12 +455,13 @@ import { h, app } from 'hyperapp'
 app(state, actions, view, document.getElementById('root'))
 ```
 
+更多比较细细体会，主要我不想写了。🈚️ 🈚️ 
+
 # ✈️ 🦃️ 脚手架
 
-这是一个基于 parcel + typescript + hyperapp + pwa 的脚手架, 正在视图使其支持 antd、数据流、路由等常规配置。
+这是一个基于 parcel + typescript + hyperapp + pwa 的脚手架（本来是打算改吧改吧支持 chrome extensions 开发的）, 正在试图使其支持 antd、再加上数据流、路由等常规配置。
 
-希望有兴趣的可以 PR
-
+目前正处于不断完善中，希望有兴趣的可以 PR。
 
 # 🌞 🌞 参考
 

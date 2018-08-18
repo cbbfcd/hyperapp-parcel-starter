@@ -1,11 +1,12 @@
-# hyperapp-parcel-starter
+# 🌈 hyperapp-parcel-starter
 
 > a starter via hyperapp and parcel and TypeScript.
 
 more about [hyperapp](https://hyperapp.js.org/), [parcel](https://parceljs.org/getting_started.html)
 
+🌈 unscheduled continuous development
 
-# features
+# 🚀 features
 
 - [x] TypeScript
 - [x] CSS/Less/Sass(need add node-sass)
@@ -18,7 +19,7 @@ more about [hyperapp](https://hyperapp.js.org/), [parcel](https://parceljs.org/g
 - [ ] ui lib(can i support ant-design?)
 - more...
 
-# run
+# 🔥 run
 
 ```
 git clone ...

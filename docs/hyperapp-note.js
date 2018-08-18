@@ -3,11 +3,21 @@
  * author: 波比小金刚
 */
 
+// ⚠️ h 函数的作用是构建 v-DOM
+// 用 JavaScript 来表示一个 DOM 节点是很简单的事情，你只需要记录它的节点类型、属性，还有子节点, key?
+// v-DOM 黄金结构法则：
+// {
+//    key?: ''
+//    nodeName: '',
+//    attributes: '',
+//    children: []
+// }
 export function h(name, attributes) {
   var rest = []
   var children = []
   var length = arguments.length
 
+  // 🌈 超过 2 个参数的时候，把多余的参数‘倒序’放进 rest 队列中
   while (length-- > 2) rest.push(arguments[length])
 
   while (rest.length) {

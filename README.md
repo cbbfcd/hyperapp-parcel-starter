@@ -16,7 +16,7 @@
 
 Hyperapp 只有两个最重要的 API:
 
-- h: 用于处理 view，返回 Virtual DOM 节点
+- h: 用于处理 view，返回 Virtual DOM 节点(后续都以 v-DOM 代表虚拟 DOM 技术)
 - app: 用于将一个应用程序挂载到特定的 DOM 元素上，也可以不指定 DOM 元素（这将利于测试）
 
 ## ❤️ 🔥 h
@@ -155,6 +155,71 @@ const actions = {
 
 ### 🐒 🍑 view
 
+一起都源于状态的改变，当 state 改变的时候，view 函数被调用。然后在 h 函数的作用下，将会有一个新的 v-Dom 结构诞生。
+
+```js
+import { h } from "hyperapp"
+
+export const view = (state, actions) =>
+  h("div", {}, [
+    h("h1", {}, state.count),
+    h("button", { onclick: () => actions.down(1) }, "-"),
+    h("button", { onclick: () => actions.up(1) }, "+")
+  ])
+
+// h 的作用就是产生一个 v-DOM
+{
+  nodeName: "div",
+  attributes: {},
+  children: [
+    {
+      nodeName: "h1",
+      attributes: {},
+      children: [0]
+    },
+    {
+      nodeName: "button",
+      attributes: { ... },
+      children: ["-"]
+    },
+    {
+      nodeName:   "button",
+      attributes: { ... },
+      children: ["+"]
+    }
+  ]
+}
+```
+利用 v-DOM 的 diff、patch 一系列骚操作之后，视图得以更新。完美安排上了❕ 👌
+
+v-DOM 经典步骤：
+
+1. 用 JavaScript 对象结构表示 DOM 树的结构；然后用这个树构建一个真正的 DOM 树，插到文档当中
+
+2. 当状态变更的时候，重新构造一棵新的对象树。然后用新的树和旧的树进行比较，记录两棵树差异
+
+3. 把2所记录的差异应用到步骤1所构建的真正的DOM树上，视图就更新了
+
+Virtual DOM 算法主要是实现上面步骤的三个函数：element，diff，patch。就像是在 DOM 和 JS 之间加了一层缓存
+
+直接操作 DOM 的代价是昂贵的，v-DOM 的出现使得我们可以事无忌惮的刷起来。
+
+Hyperapp 在内存中保存了两颗 v-DOM 树，目的也是为了避免每次丢弃旧的 v-DOM 树的浪费。
+
+### 🔥 🌞 Mounting
+
+要在页面中安装应用程序，我们需要一个DOM元素。 此元素称为应用程序容器。 使用Hyperapp构建的应用程序始终只有一个容器。
+
+```js
+app(state, actions, view, container)
+```
+
+Hyperapp还将尝试重用容器内的现有元素，从而实现 SEO 优化并改善您的网站交互。（对于 SEO 优化，就仁者见仁了）
+
+当然 Hyperapp 是支持 SSR 的！😄😄😄
+
+
+
 ## 🐍 🐛 react
 
 与 React 做一个简单粗暴的对比：
@@ -175,4 +240,9 @@ app(state, actions, view, document.getElementById('root'))
 
 希望有兴趣的可以 PR
 
-[文档](./about.md)
+
+# 🌞 🌞 参考
+
+[🔥文档](./about.md)
+
+[🔥虚拟DOM](https://www.zhihu.com/question/29504639)

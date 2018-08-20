@@ -1,9 +1,9 @@
 /**
- * version: 1.2.8
- * author: 波比小金刚
+ * version: 🔥 🔥 1.2.8
+ * author: ❤️ ❤️ 波比小金刚
 */
 
-// ⚠️ h 函数的作用是构建 v-DOM
+// ⚠️ ⚠️ h 函数的作用是构建 v-DOM
 // 用 JavaScript 来表示一个 DOM 节点是很简单的事情，你只需要记录它的节点类型、属性，还有子节点, key?
 // v-DOM 黄金结构法则：
 // {
@@ -17,21 +17,56 @@ export function h(name, attributes) {
   var children = []
   var length = arguments.length
 
-  // 🌈 超过 2 个参数的时候，把多余的参数‘倒序’放进 rest 队列中
+  // 🌈 🌈 超过 2 个参数的时候，把多余的参数‘倒序’放进 rest 队列中
+  // 。请 ⚠️ 区别 a-- 和 --a 
   while (length-- > 2) rest.push(arguments[length])
 
+  // 🔥 扁平化 rest
+  // 为什么要进行扁平化处理的目的❓ 看👇的例子你就明白了。
+  /**
+   * const children = [ <button>btn1</button>, <button>btn2</button> ]
+   * const btnNode = (
+   *   <div>
+   *    <p>text</p>
+   *    { children }
+   *   </div>
+   * )
+   * ⚠️ 接下来，编译之后 👇：
+   * const children = [
+   *   h("button", {}, "btn1"),
+   *   h("button", {}, "btn2")
+   * ]
+   * const btnNode = h("div", {}, h("p", {}, "text"), children);
+   * 😫 这肯定跟预期的不符合，我们希望的是这样的结构 👇：
+   * const btnNode = h("div", {}, [
+   *   h("p", {}, "text"),
+   *   h("button", {}, "btn1"),
+   *   h("button", {}, "btn2")
+   * ])
+   * 结合下面的源码，你就知道为什么了吧 😄
+   */
   while (rest.length) {
     var node = rest.pop()
+    // 如果是数组(数组有 pop 的方法)
     if (node && node.pop) {
+      // 再倒序一下，就变成正常的顺序了
       for (length = node.length; length--; ) {
         rest.push(node[length])
       }
-    } else if (node != null && node !== true && node !== false) {
+    } else if (node != null && node !== true && node !== false) { // 排除空值，布尔值
       children.push(node)
     }
   }
-
+  // 🏁 🏁 这里看出 h 函数的主要功能就是生成一个 v-DOM 结构来，但是双 api 结构，使得 h 函数脱离开来，
+  // 表明 hyperapp 希望用户使用时，用来生成 v-DOM 的方式更加自由，可以直接用 h 函数，也可以用别的模版语法，比如 JSX。
   return typeof name === "function"
+    // 这里 name 为函数的情况，比如对一个组件的操作。
+    /**
+     * const Demo = ({name: 'jack ma'}) => (<div><h1>{ name }</h1></div>)
+     * 编译 👇：
+     * const Demo = ({name: 'jack ma'}) => h('div', {}, h('h1', {}, name))
+     * 👀 💡 是不是直接调用也可以得到一个 v-DOM 结构嘛！！！！ 👀 👉 👉 h(Demo, {name: 'jack ma'})
+     */
     ? name(attributes || {}, children)
     : {
         nodeName: name,
@@ -41,7 +76,11 @@ export function h(name, attributes) {
       }
 }
 
+// 🌈  核心应用
+// 我们可以通过下边的代码看出 app 函数的整个执行生命周期过程 👇：
+// 🔥 🔥 app函数执行( app() ) --> 🕖 初始化 --> 🚄 scheduleRender()
 export function app(state, actions, view, container) {
+  // 🕖 初始化
   var map = [].map
   var rootElement = (container && container.children[0]) || null
   var oldNode = rootElement && recycleElement(rootElement)
@@ -51,9 +90,10 @@ export function app(state, actions, view, container) {
   var globalState = clone(state)
   var wiredActions = wireStateToActions([], globalState, clone(actions))
 
+  // 🚄 字如其名，调度渲染
   scheduleRender()
 
-  return wiredActions
+  return wiredActions // 当你看到这里 app 的主流程就结束了，10行代码，惊不惊喜❕刺不刺激❕ 🔚 🔚 🔚
 
   function recycleElement(element) {
     return {

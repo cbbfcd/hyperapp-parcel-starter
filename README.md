@@ -21,7 +21,7 @@ Hyperapp 只有两个最重要的 API:
 
 ## ❤️ 🔥 h
 
-文档中使用了 jsx，需要安装 babel 插件将 jsx 编译成 h 函数能够处理的样子。
+官方文档中使用了 jsx，需要安装 babel 插件将 jsx 编译成 h 函数能够处理的样子。
 
 大体上你可以想象一下 React.createElement() 👈
 
@@ -89,7 +89,7 @@ const state = {
   }
 }
 
-// 你只需要让你的 action 和它保持同样的嵌套结构即可（同样的命名空间下）
+// 你只需要让你的 action 和它保持同样的嵌套结构即可（同样的命名空间下），这样就可以接收到一个局部的 state 和 actions 作为参数。
 const actions = {
   counter: {
     down: value => state => ({ count: state.count - value }),
@@ -106,7 +106,7 @@ const actions = {
 
 actions 也是一个载体，是一个一元函数（只有一个参数），只能通过 actions 来更新状态，返回一个浅合并的新的状态，然后 v-DOM 一番操作猛如虎之后视图重绘。
 
-⚠️ 当然你也可以返回一个函数，参数是当前的 state 和 actions, 然后再返回一个局部的 state.
+⚠️ 当然你也可以返回一个函数，参数是当前局部的 state 和 actions, 然后再返回一个新的局部的 state.
 
 ```js
 const actions = {
@@ -375,6 +375,7 @@ export const Textbox = ({ placeholder }) => (
 在从 DOM 中删除元素 *之前* 👈 触发此事件。 用它来创建幻灯片/淡出动画。 
 
 ⚠️ 在函数内部调用以删除元素。 不会在其子元素中调用此事件。
+⚠️ done 这个参数是决定是否进行删除并触发 ondestroy hook 的钥匙，必须要带上哦
 
 ```js
 import { h } from "hyperapp"

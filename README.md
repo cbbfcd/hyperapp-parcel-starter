@@ -194,15 +194,15 @@ export const view = (state, actions) =>
   ]
 }
 ```
-利用 v-DOM 的 diff、patch 一系列骚操作之后，视图得以更新。完美安排上了❕ 👌
+利用 v-DOM 的 element、diff、patch 一系列骚操作之后，视图得以更新。完美安排上了❕ 👌
 
 v-DOM 经典步骤：
 
-1. 用 JavaScript 对象结构表示 DOM 树的结构；然后用这个树构建一个真正的 DOM 树，插到文档当中
+1. 用 JavaScript 对象结构表示 DOM 树的结构；然后用这个树构建一个真正的 DOM 树，插到文档当中（element）
 
-2. 当状态变更的时候，重新构造一棵新的对象树。然后用新的树和旧的树进行比较，记录两棵树差异
+2. 当状态变更的时候，重新构造一棵新的对象树。然后用新的树和旧的树进行比较，记录两棵树差异(diff)
 
-3. 把 2 所记录的差异应用到步骤 1 所构建的真正的DOM树上，视图就更新了
+3. 把 2 所记录的差异应用到步骤 1 所构建的真正的DOM树上，视图就更新了(patch)
 
 Virtual DOM 算法主要是实现上面步骤的三个函数：element，diff，patch。就像是在 DOM 和 JS 之间加了一层缓存
 
@@ -461,6 +461,59 @@ app(state, actions, view, document.getElementById('root'))
 
 更多比较细细体会，主要我不想写了。🈚️ 🈚️ 
 
+# 🔥 🔥 坑点（持续更新）
+
+1. eserved DOM attributes (boolean值属性)
+
+```js
+const view = () => (
+  <input 
+    placeholder='有多坑?' 
+    oncreate={ el => console.log(el) }
+    disabled
+  />
+)
+// 输出："<input type='text' placeholder='haha' disabled=''>"
+
+const view = () => (
+  <input 
+    placeholder='有多坑?' 
+    oncreate={ el => console.log(el) }
+    disabled='false'
+  />
+)
+// 输出："<input type='text' placeholder='haha' disabled=''>"(改成 true 也是这样输出)
+
+const view = () => (
+  <input 
+    placeholder='有多坑?' 
+    oncreate={ el => console.log(el) }
+    disabled={true}
+  />
+)
+// 输出："<input type='text' placeholder='haha' disabled=''>"
+
+const view = () => (
+  <input 
+    placeholder='有多坑?' 
+    oncreate={ el => console.log(el) }
+    disabled={false}
+  />
+)
+// 输出："<input type='text' placeholder='haha'>"
+```
+⚠️ 建议对于 disabled 之类的元素属性还是用 {true}, {false},不要贸然用字符串！
+
+2. [img 设置高度](https://github.com/hyperapp/hyperapp/issues/634)
+
+```js
+<img src='xxx' height='598px'> // ==> <img src='xxx' height='0'>
+<img src='xxx' height='598'> // ==> <img src='xxx' height='598'>
+<img src='xxx' height={'598px'}> // ==> <img src='xxx' height='0'>
+```
+
+⚠️ 建议，这种就用 css 去控制吧！
+
 # ✈️ 🦃️ 脚手架
 
 这是一个基于 parcel + typescript + hyperapp + pwa 的脚手架（本来是打算改吧改吧支持 chrome extensions 开发的）, 正在试图使其支持 antd、再加上数据流、路由等常规配置。
@@ -472,3 +525,5 @@ app(state, actions, view, document.getElementById('root'))
 [🔥文档](./about.md)
 
 [🔥虚拟DOM](https://www.zhihu.com/question/29504639)
+
+[🔥React没用的算法(v-DOM)](https://grfia.dlsi.ua.es/ml/algorithms/references/editsurvey_bille.pdf)

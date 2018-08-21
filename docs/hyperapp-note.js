@@ -43,13 +43,13 @@ export function h(name, attributes) {
    *   h("button", {}, "btn1"),
    *   h("button", {}, "btn2")
    * ])
-   * 结合下面的源码，你就知道为什么了吧 😄
+   * 结合👇源码，你就知道为什么了吧 😄
    */
   while (rest.length) {
     var node = rest.pop()
     // 如果是数组(数组有 pop 的方法)
     if (node && node.pop) {
-      // 再倒序一下，就变成正常的顺序了
+      // 这里倒序，为了出来的结构顺序是对的
       for (length = node.length; length--; ) {
         rest.push(node[length])
       }
@@ -80,7 +80,7 @@ export function h(name, attributes) {
 // 我们可以通过下边的代码看出 app 函数的整个执行生命周期过程 👇：
 // 🔥 🔥 app函数执行( app() ) --> 🕖 初始化 --> 🚄 scheduleRender()
 export function app(state, actions, view, container) {
-  // 🕖 初始化
+  // 🕖 初始化👇的这一堆东东
   var map = [].map
   var rootElement = (container && container.children[0]) || null
   var oldNode = rootElement && recycleElement(rootElement)
@@ -90,10 +90,18 @@ export function app(state, actions, view, container) {
   var globalState = clone(state)
   var wiredActions = wireStateToActions([], globalState, clone(actions))
 
-  // 🚄 字如其名，调度渲染
+  // 🚄 字如其名，开始调度渲染
   scheduleRender()
 
-  return wiredActions // 当你看到这里 app 的主流程就结束了，10行代码，惊不惊喜❕刺不刺激❕ 🔚 🔚 🔚
+  // 当你看到这里 app 的主流程就结束了，10行代码，惊不惊喜❕刺不刺激❕ 🔚 🔚 🔚
+  // @see https://github.com/hyperapp/hyperapp#interoperability 
+  // 📖 文档中说过的(The app function returns a copy of your actions where every function is wired to changes in the state)
+  return wiredActions 
+
+
+  // 🔥 接下来就是 16 个辅助函数的疯狂输出！
+  // ⚠️ 建议首先根据执行流程顺序，➡️ 关注 scheduleRender 函数
+
 
   function recycleElement(element) {
     return {
@@ -107,7 +115,10 @@ export function app(state, actions, view, container) {
     }
   }
 
+  // 🌈 生成一个 v-DOM
   function resolveNode(node) {
+    // 其实就是调用 view 函数就可以得到一个 v-DOM 结构
+    // 这里递归 + 三目的写法是为了巧妙的使做 check 的分支结构语句更简洁 👍
     return typeof node === "function"
       ? resolveNode(node(globalState, wiredActions))
       : node != null
@@ -115,30 +126,41 @@ export function app(state, actions, view, container) {
         : ""
   }
 
+  // 🌈 实际渲染函数
   function render() {
+    // 1. 更新锁状态
     skipRender = !skipRender
-
+    // 2. ➡️ 生成一个新的 v-DOM
     var node = resolveNode(view)
 
     if (container && !skipRender) {
+      // 3. ➡️ 若满足条件，进行 patch 操作
       rootElement = patch(container, rootElement, oldNode, (oldNode = node))
     }
-
+    // 4. 更新 isRecycling 状态，这个状态只用于决定生命周期执行 oncreate 还是 onupdate
+    // var cb = isRecycling ? attributes.oncreate : attributes.onupdate
     isRecycling = false
-
+    // 5. 将队列中的生命周期 hook 全部执行一次。
     while (lifecycle.length) lifecycle.pop()()
   }
 
+  // 🌈 调度渲染
+  // 这里的调度有两层含义：
+  //   1. 利用浏览器的 event-loop 机制实现异步执行渲染(render) 
+  //   2. 通过一个锁机制(skipRender)避免密集更新造成的性能损耗。
+  // 通过 actions 触发状态更新就会调用这个调度渲染函数，为了性能采用了异步和锁机制。但是略粗糙（相比于 Vue 之类复杂框架的 nextTick、waterQueue） 
   function scheduleRender() {
     if (!skipRender) {
       skipRender = true
+      // ➡️ 接下来，看看实际执行渲染的 render 函数
       setTimeout(render)
     }
   }
 
+  // 🌈 简单版的克隆函数，虽然寒酸不及lodash之类的全面，够用就行！
   function clone(target, source) {
     var out = {}
-
+    // source 覆盖 target 中的同名属性
     for (var i in target) out[i] = target[i]
     for (var i in source) out[i] = source[i]
 
@@ -207,33 +229,43 @@ export function app(state, actions, view, container) {
     return node ? node.key : null
   }
 
+  // 🌈 注册事件
   function eventListener(event) {
+    // @see https://developer.mozilla.org/zh-CN/docs/Web/API/Event/currentTarget
     return event.currentTarget.events[event.type](event)
   }
 
+  // 🌈 更新属性
   function updateAttribute(element, name, value, oldValue, isSvg) {
-    if (name === "key") {
-    } else if (name === "style") {
+    if (name === "key") { // 1. 忽略 key 这个属性
+    } else if (name === "style") { 
+      // 2.更新样式对象
       for (var i in clone(oldValue, value)) {
+        // 只更新 value（新的）中有的
         var style = value == null || value[i] == null ? "" : value[i]
+        // ⚠️ 这里是为了支持自定义的 CSS 变量
+        // @see https://github.com/hyperapp/hyperapp/commit/11d65a580adefae308716590ff78f8766b315cf9
         if (i[0] === "-") {
+          // https://developer.mozilla.org/en-US/docs/Web/CSS/Using_CSS_variables
           element[name].setProperty(i, style)
         } else {
           element[name][i] = style
         }
       }
     } else {
+      // 3.更新事件
       if (name[0] === "o" && name[1] === "n") {
+        // event.type
         name = name.slice(2)
-
+        // 缓存到 element 的 events 属性
         if (element.events) {
           if (!oldValue) oldValue = element.events[name]
         } else {
           element.events = {}
         }
-
+        // 更新对应的事件
         element.events[name] = value
-
+        // 确保事件只被注册一次且在没指定的时候被释放
         if (value) {
           if (!oldValue) {
             element.addEventListener(name, eventListener)
@@ -250,17 +282,24 @@ export function app(state, actions, view, container) {
         name !== "translate" &&
         !isSvg
       ) {
+        // 👆的一堆 !== 的判断作用是 看👇的 PR 内容即可明白了 💃 💃。
+        // 🔥 🔥 这一部分的处理我觉得仍然是有问题的！毕竟这么短小精悍，很多细节是很粗放的去解决的。(可以参见 readme.md 中坑点总结)
+        // @see https://github.com/hyperapp/hyperapp/pull/629
+        // 4. 更新元素的属性（比如：<input disabled={true}/>）
         element[name] = value == null ? "" : value
       } else if (value != null && value !== false) {
+        // 5. 更新普通值属性
         element.setAttribute(name, value)
       }
 
       if (value == null || value === false) {
+        // 6. 移除
         element.removeAttribute(name)
       }
     }
   }
 
+  // 🌈 根据 v-DOM 创建真实的 DOM 节点
   function createElement(node, isSvg) {
     var element =
       typeof node === "string" || typeof node === "number"
@@ -297,6 +336,7 @@ export function app(state, actions, view, container) {
     return element
   }
 
+  // 🌈 根据新老 v-DOM 的属性进行按需更新
   function updateElement(element, oldAttributes, attributes, isSvg) {
     for (var name in clone(oldAttributes, attributes)) {
       if (
@@ -305,6 +345,7 @@ export function app(state, actions, view, container) {
           ? element[name]
           : oldAttributes[name])
       ) {
+        // 属性值不同的时候才执行更新
         updateAttribute(
           element,
           name,
@@ -315,6 +356,7 @@ export function app(state, actions, view, container) {
       }
     }
 
+    // 属性更新的时候，首次渲染为 oncreate hook，否则为 onupdate hook，然后压入生命周期队列中。
     var cb = isRecycling ? attributes.oncreate : attributes.onupdate
     if (cb) {
       lifecycle.push(function() {
@@ -323,6 +365,8 @@ export function app(state, actions, view, container) {
     }
   }
 
+  // 🌈 递归 (从最叶节点开始)触发所有定义的 ondestroy hook，这里其实没有删除的操作
+  // 不理解的可以了解一下递归-调用栈的知识
   function removeChildren(element, node) {
     var attributes = node.attributes
     if (attributes) {
@@ -337,8 +381,13 @@ export function app(state, actions, view, container) {
     return element
   }
 
+  // 🌈 删除元素
+  // 一旦定义了 onremove 的 hook，意味着执行删除操作的权利就反转到了 done 函数的拥有者，所以可以通过这个 hook 做一些删除前的操作。
+  // 文档中也说了：Call done inside the function to remove the element.（https://github.com/hyperapp/hyperapp#onremove）
   function removeElement(parent, element, node) {
     function done() {
+      // 删除执行！ https://developer.mozilla.org/zh-CN/docs/Web/API/Node/removeChild
+      // 执行 parent.removeChild(element) 就完事儿了，但是这里加了一层 removeChildren 函数是为了触发另一个 hook，用来做删除后的操作（ondestroy）
       parent.removeChild(removeChildren(element, node))
     }
 
@@ -350,20 +399,38 @@ export function app(state, actions, view, container) {
     }
   }
 
+  // 🌈 虚拟 DOM 技术三板斧之 -- patch
+  // 你可以想象成增量的去给之前的 v-DOM 打补丁，使得所有的改变以最小的代价附着上去。
+  // 只有在这一步是真实的操作了 DOM 的，Hyperapp 在内存中保存着两颗树来做 diff 以及视图更新，提高了性能。
+  // ⚠️参数说明（依次是）：父节点、当前节点、旧的 v-DOM、新的 v-DOM、是否是 svg (因为 svg 较之更特殊一点)
+  // diff 本身是一个 O(n^3) 复杂度的算法，如果平级比较，复杂度就回到了 O(n)
   function patch(parent, element, oldNode, node, isSvg) {
     if (node === oldNode) {
+      // 1⃣️ v-DOM 没改变，则不用更新
     } else if (oldNode == null || oldNode.nodeName !== node.nodeName) {
+      // 2⃣️ 如果旧 v-DOM 不存在, 直接插入在当前节点之前（如果当前节点不存在，则插入在末尾位置）。
+      // 如果新的 v-DOM 和旧 v-DOM 不同（通过 nodeName 判断的），也是插入到当前节点的前面，且旧节点存在的话就移除旧的。
       var newElement = createElement(node, isSvg)
+      // https://developer.mozilla.org/zh-CN/docs/Web/API/Node/insertBefore
       parent.insertBefore(newElement, element)
 
       if (oldNode != null) {
+        // 删除当前节点
         removeElement(parent, element, oldNode)
       }
-
+      // 更新当前节点
       element = newElement
     } else if (oldNode.nodeName == null) {
+      // 3⃣️ 根据 h 函数可以知道，oldName.nodeName 为空指的是 👉 非元素节点类型 👈 ！！
+      // 🚀 补课：DOM 中有三大节点类型：元素节点、属性节点、文本节点，都有 nodeType、nodeName 和 nodeValue 三大属性。
+      // 🚀 根据 DOM Level 2 规范，nodeValue == null 的节点类型，对它赋值不会有任何效果(比如元素节点的 nodeValue == null，更新其 nodeValue 并不会有任何卵用)，
+      // 🚀 而其它的比如 🔥 text、🔥 comment、🔥 CDATA、🔥 attributes 等节点的 nodeValue 不为空，所以直接更新其 nodeValue 值即可完成节点更新。
+      // https://developer.mozilla.org/zh-CN/docs/Web/API/Node/nodeValue
       element.nodeValue = node
     } else {
+      // 4⃣️ 剩下的就是新旧节点均存在，nodeName 还一样，但二者不是同一节点。
+
+      // 1. 属性更新
       updateElement(
         element,
         oldNode.attributes,

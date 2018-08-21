@@ -225,6 +225,7 @@ export function app(state, actions, view, container) {
     return actions
   }
 
+  // 🌈 获取 key
   function getKey(node) {
     return node ? node.key : null
   }
@@ -430,32 +431,36 @@ export function app(state, actions, view, container) {
     } else {
       // 4⃣️ 剩下的就是新旧节点均存在，nodeName 还一样，但二者不是同一节点。
 
-      // 1. 属性更新
+      // 1. 🔥 属性更新（执行这一步相当于把第一层已经 diff -> patch 了，剩下的就是处理各自的 children）
       updateElement(
         element,
         oldNode.attributes,
         node.attributes,
         (isSvg = isSvg || node.nodeName === "svg")
       )
+      // 2. 🔥 为了提高性能，采用 key 值标记虚拟节点
+      var oldKeyed = {} // key: [oldRealDomNode, oldVirtualDomNode]映射
+      var newKeyed = {} // key: [newRealDomNode, newVirtualDomNode]映射
+      var oldElements = [] // 旧真实 DOM 节点队列
+      var oldChildren = oldNode.children // 旧虚拟节点
+      var children = node.children // 新虚拟节点
 
-      var oldKeyed = {}
-      var newKeyed = {}
-      var oldElements = []
-      var oldChildren = oldNode.children
-      var children = node.children
-
+      // 2.1 🐒 处理旧虚拟节点（主要就是处理成用 "key" 标记的 [oldRealDomNode, oldVirtualDomNode] 结构的映射）
       for (var i = 0; i < oldChildren.length; i++) {
+        // 对应的真实节点
         oldElements[i] = element.childNodes[i]
 
         var oldKey = getKey(oldChildren[i])
         if (oldKey != null) {
+          // 记录
           oldKeyed[oldKey] = [oldElements[i], oldChildren[i]]
         }
       }
 
-      var i = 0
-      var k = 0
+      var i = 0 // 旧虚拟节点 索引
+      var k = 0 // 新虚拟节点 索引
 
+      // 2.2 🐒 处理新虚拟节点
       while (k < children.length) {
         var oldKey = getKey(oldChildren[i])
         var newKey = getKey((children[k] = resolveNode(children[k])))

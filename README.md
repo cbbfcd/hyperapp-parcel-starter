@@ -210,6 +210,10 @@ Virtual DOM 算法主要是实现上面步骤的三个函数：element，diff，
 
 Hyperapp 在内存中保存了两颗 v-DOM 树，目的也是为了避免每次丢弃旧的 v-DOM 树的浪费。
 
+Hyperapp 中处理 patch 的逻辑如下图(thanks: https://github.com/ChrisCindy):
+
+![patch](http://www.fecoding.cn/content/images/2018/05/patch_children.jpg)
+
 ### 🔥 🌞 Mounting
 
 要在页面中安装应用程序，我们需要一个 DOM 元素。 此元素称为应用程序容器。 使用 Hyperapp 构建的应用程序始终只有一个容器。
@@ -527,3 +531,5 @@ const view = () => (
 [🔥虚拟DOM](https://www.zhihu.com/question/29504639)
 
 [🔥React没用的算法(v-DOM)](https://grfia.dlsi.ua.es/ml/algorithms/references/editsurvey_bille.pdf)
+
+[🔥patch算法流程图](http://www.fecoding.cn/content/images/2018/05/patch_children.jpg)

@@ -210,7 +210,7 @@ Virtual DOM 算法主要是实现上面步骤的三个函数：element，diff，
 
 Hyperapp 在内存中保存了两颗 v-DOM 树，目的也是为了避免每次丢弃旧的 v-DOM 树的浪费。
 
-Hyperapp 中处理 patch 的逻辑如下图(thanks: https://github.com/ChrisCindy):
+Hyperapp 中处理 patch 的逻辑如下图(thanks: [ChrisCindy](https://github.com/ChrisCindy)):
 
 ![patch](http://www.fecoding.cn/content/images/2018/05/patch_children.jpg)
 

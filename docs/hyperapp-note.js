@@ -102,7 +102,7 @@ export function app(state, actions, view, container) {
   // 🔥 接下来就是 16 个辅助函数的疯狂输出！
   // ⚠️ 建议首先根据执行流程顺序，➡️ 关注 scheduleRender 函数
 
-
+  // 🌈 这个函数最早叫做 elementToNode，又改名叫 toVNode，现在这个名字更准确
   function recycleElement(element) {
     return {
       nodeName: element.nodeName.toLowerCase(),
@@ -167,6 +167,7 @@ export function app(state, actions, view, container) {
     return out
   }
 
+  // 🌈 设置局部的 state 很巧妙的办法，简单高效 👍
   function setPartialState(path, value, source) {
     var target = {}
     if (path.length) {
@@ -179,6 +180,7 @@ export function app(state, actions, view, container) {
     return value
   }
 
+  // 🌈 获取局部的 state 很巧妙的办法，简单高效 👍
   function getPartialState(path, source) {
     var i = 0
     while (i < path.length) {
@@ -187,23 +189,32 @@ export function app(state, actions, view, container) {
     return source
   }
 
+  // 🌈 把 state 和 actions 连接起来
+  // 通过这个函数也可以看出来为什么 readme 文档中说的嵌套 state，嵌套 actions 问题。
   function wireStateToActions(path, state, actions) {
+    // 遍历
     for (var key in actions) {
       typeof actions[key] === "function"
         ? (function(key, action) {
+            // 使用 IIFE 形成一个闭包，重写 action 函数
             actions[key] = function(data) {
+              // 执行 action
               var result = action(data)
-
+              // 如果得到的结果是函数，就传入 state, actions 再执行
+              // 这就是为什么可以这样用：const actions = { up: (value) => (state, actions) => ({count: state.count + value}) }
               if (typeof result === "function") {
                 result = result(getPartialState(path, globalState), actions)
               }
-
+              // result 存在、不是 Promise、且与当前 state 中同路径下局部 state 不一致时，应该重新渲染视图了。
               if (
                 result &&
                 result !== (state = getPartialState(path, globalState)) &&
                 !result.then // !isPromise
               ) {
+                // 安排上！重新渲染！
+                // 这里也说明了只有 actions 能够改变 state 触发重新渲染，并且每次返回的新 state（Immutable）
                 scheduleRender(
+                  // 更新 globalState
                   (globalState = setPartialState(
                     path,
                     clone(state, result),
@@ -215,13 +226,13 @@ export function app(state, actions, view, container) {
               return result
             }
           })(key, actions[key])
-        : wireStateToActions(
+        : wireStateToActions( // 递归的执行，用于按照上面的逻辑解析那些嵌套更深的 actions 对象
             path.concat(key),
             (state[key] = clone(state[key])),
             (actions[key] = clone(actions[key]))
           )
     }
-
+    // 返回处理后的所有函数，相当于暴露接口
     return actions
   }
 
@@ -302,6 +313,8 @@ export function app(state, actions, view, container) {
 
   // 🌈 根据 v-DOM 创建真实的 DOM 节点
   function createElement(node, isSvg) {
+    // @see https://developer.mozilla.org/en-US/docs/Web/API/Document/createTextNode
+    // @see https://developer.mozilla.org/en-US/docs/Web/API/Document/createElementNS
     var element =
       typeof node === "string" || typeof node === "number"
         ? document.createTextNode(node)
@@ -314,12 +327,14 @@ export function app(state, actions, view, container) {
 
     var attributes = node.attributes
     if (attributes) {
+      // 压入 oncreate hook
       if (attributes.oncreate) {
         lifecycle.push(function() {
           attributes.oncreate(element)
         })
       }
 
+      // 处理 children
       for (var i = 0; i < node.children.length; i++) {
         element.appendChild(
           createElement(
@@ -329,6 +344,7 @@ export function app(state, actions, view, container) {
         )
       }
 
+      // 属性
       for (var name in attributes) {
         updateAttribute(element, name, attributes[name], null, isSvg)
       }
@@ -429,7 +445,8 @@ export function app(state, actions, view, container) {
       // https://developer.mozilla.org/zh-CN/docs/Web/API/Node/nodeValue
       element.nodeValue = node
     } else {
-      // 4⃣️ 剩下的就是新旧节点均存在，nodeName 还一样，但二者不是同一节点。
+      // 4⃣️ 剩下的就是新旧节点均存在，nodeName 还一样，但二者不是同一节点的情况。
+      // ⚠️ readme 文档中有一个流程图可以参考（感谢北京邮电大学的 ChrisCindy）
 
       // 1. 🔥 属性更新（执行这一步相当于把第一层已经 diff -> patch 了，剩下的就是处理各自的 children）
       updateElement(
@@ -438,9 +455,9 @@ export function app(state, actions, view, container) {
         node.attributes,
         (isSvg = isSvg || node.nodeName === "svg")
       )
-      // 2. 🔥 为了提高性能，采用 key 值标记虚拟节点
+      // 2. 🔥 为了提高性能，采用 key 值标记（插入比删除再新建更高效，所以没有直接递归的去 patch children）
       var oldKeyed = {} // key: [oldRealDomNode, oldVirtualDomNode]映射
-      var newKeyed = {} // key: [newRealDomNode, newVirtualDomNode]映射
+      var newKeyed = {} // key: newVirtualDomNode 映射
       var oldElements = [] // 旧真实 DOM 节点队列
       var oldChildren = oldNode.children // 旧虚拟节点
       var children = node.children // 新虚拟节点
@@ -460,16 +477,18 @@ export function app(state, actions, view, container) {
       var i = 0 // 旧虚拟节点 索引
       var k = 0 // 新虚拟节点 索引
 
-      // 2.2 🐒 处理新虚拟节点
+      // 2.2 🐒 遍历 patch 处理所有的新虚拟节点，从第一个新虚拟节点开始。
       while (k < children.length) {
+        // 分别获取当前索引下的新旧key
         var oldKey = getKey(oldChildren[i])
         var newKey = getKey((children[k] = resolveNode(children[k])))
-
+        // 新节点映射中已经记录了 oldKey 及对应节点的情况(就不用对比了，轮到下一个旧虚拟节点)
         if (newKeyed[oldKey]) {
           i++
           continue
         }
-
+        // @see https://github.com/hyperapp/hyperapp/pull/663
+        // @see https://github.com/hyperapp/hyperapp/commit/f16f7fca385cab00224013e8431cca487ce41773
         if (newKey != null && newKey === getKey(oldChildren[i + 1])) {
           if (oldKey == null) {
             removeElement(element, oldElements[i], oldChildren[i])
@@ -477,20 +496,26 @@ export function app(state, actions, view, container) {
           i++
           continue
         }
-
+        // newKey 不存在或者是第一次渲染的情况
         if (newKey == null || isRecycling) {
+          // 若 oldKey 也不存在，那就直接 patch 操作，然后轮到一下一个新虚拟节点
           if (oldKey == null) {
             patch(element, oldElements[i], oldChildren[i], children[k], isSvg)
             k++
           }
+          // 若 oldKey 存在，就轮到下一个旧虚拟节点
           i++
         } else {
-          var keyedNode = oldKeyed[newKey] || []
+          // 🚀 其余情况的处理流程：
 
+          // 旧虚拟节点映射中 newKey 映射的数据
+          var keyedNode = oldKeyed[newKey] || []
+          // 如果新旧虚拟节点的 key 相同，递归的 patch 之后，轮到下一个旧虚拟节点
           if (oldKey === newKey) {
             patch(element, keyedNode[0], keyedNode[1], children[k], isSvg)
             i++
           } else if (keyedNode[0]) {
+            // 如果新旧虚拟节点 key 不同，而且 keyedNode 存在, 插入 keyedNode[0] 节点，patch
             patch(
               element,
               element.insertBefore(keyedNode[0], oldElements[i]),
@@ -501,12 +526,13 @@ export function app(state, actions, view, container) {
           } else {
             patch(element, oldElements[i], null, children[k], isSvg)
           }
-
+          // 建立新虚拟节点的映射关系
           newKeyed[newKey] = children[k]
           k++
         }
       }
 
+      // 2.3 🐒 去除所有没有 key 的旧虚拟节点
       while (i < oldChildren.length) {
         if (getKey(oldChildren[i]) == null) {
           removeElement(element, oldElements[i], oldChildren[i])
@@ -514,6 +540,7 @@ export function app(state, actions, view, container) {
         i++
       }
 
+      // 2.4 🐒 去掉所有没有被复用的老节点
       for (var i in oldKeyed) {
         if (!newKeyed[i]) {
           removeElement(element, oldKeyed[i][0], oldKeyed[i][1])

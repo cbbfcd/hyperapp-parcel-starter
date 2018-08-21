@@ -19,7 +19,7 @@
 Hyperapp 只有两个最重要的 API:
 
 - 🚀 h: 用于处理 view，返回 Virtual DOM 节点(后续都以 v-DOM 代表虚拟 DOM 🌈)
-- 🚀 app: 用于将一个应用程序挂载到特定的 DOM 元素上，也可以不指定 DOM 元素（文档中叫做 'headless', 这将利于测试）
+- 🚀 app: 用于将一个应用程序挂载到特定的 DOM 元素上，（不指定 DOM 元素的情况文档中叫做 'headless', 据说这样利于测试）
 
 ## ❤️ 🔥 h
 

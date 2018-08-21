@@ -78,7 +78,7 @@ export function h(name, attributes) {
 
 // 🌈  核心应用
 // 我们可以通过下边的代码看出 app 函数的整个执行生命周期过程 👇：
-// 🔥 🔥 app函数执行( app() ) --> 🕖 初始化 --> 🚄 scheduleRender()
+// 🔥 🔥 app函数执行( app() ) --> 🕖 初始化 --> 🚄 scheduleRender() <-- 🍊 wireStateToActions
 export function app(state, actions, view, container) {
   // 🕖 初始化👇的这一堆东东
   var map = [].map
@@ -103,6 +103,7 @@ export function app(state, actions, view, container) {
   // ⚠️ 建议首先根据执行流程顺序，➡️ 关注 scheduleRender 函数
 
   // 🌈 这个函数最早叫做 elementToNode，又改名叫 toVNode，现在这个名字更准确
+  // 初始化的时候执行一次这个函数，是考虑诸如 SSR 的场景
   function recycleElement(element) {
     return {
       nodeName: element.nodeName.toLowerCase(),
@@ -139,6 +140,7 @@ export function app(state, actions, view, container) {
     }
     // 4. 更新 isRecycling 状态，这个状态只用于决定生命周期执行 oncreate 还是 onupdate
     // var cb = isRecycling ? attributes.oncreate : attributes.onupdate
+    // 这个参数表示是不是首次渲染
     isRecycling = false
     // 5. 将队列中的生命周期 hook 全部执行一次。
     while (lifecycle.length) lifecycle.pop()()
@@ -200,12 +202,12 @@ export function app(state, actions, view, container) {
             actions[key] = function(data) {
               // 执行 action
               var result = action(data)
-              // 如果得到的结果是函数，就传入 state, actions 再执行
+              // 如果得到的结果是函数，就传入 state, actions 再执行，这里的 state 是一个局部的 state
               // 这就是为什么可以这样用：const actions = { up: (value) => (state, actions) => ({count: state.count + value}) }
               if (typeof result === "function") {
                 result = result(getPartialState(path, globalState), actions)
               }
-              // result 存在、不是 Promise、且与当前 state 中同路径下局部 state 不一致时，应该重新渲染视图了。
+              // result 存在、不是 Promise、且与当前 globalState 中同路径下局部 state 不一致时，应该重新渲染视图了。
               if (
                 result &&
                 result !== (state = getPartialState(path, globalState)) &&

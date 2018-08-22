@@ -510,6 +510,14 @@ const view = () => (
 // 输出："<input type='text' placeholder='haha'>"
 ```
 ⚠️ 建议对于 disabled 之类的元素属性还是用 {true}, {false},不要贸然用字符串！
+⚠️ 根据[html 5.2 规范文档 -- boolean attr](https://www.w3.org/TR/html52/infrastructure.html#boolean-attribute), 我们应该使用的方式如下：
+> 感谢 [frenzzy](https://github.com/frenzzy)
+
+```js
+<input disabled/>
+<input disabled=''/>
+<input disabled='disabled'>
+```
 
 2. [img 设置高度](https://github.com/hyperapp/hyperapp/issues/634)
 

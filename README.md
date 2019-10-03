@@ -1,5 +1,7 @@
 # 🚀 ✈️ 🇧🇷 hyperapp 分析
 
+[![Greenkeeper badge](https://badges.greenkeeper.io/cbbfcd/hyperapp-parcel-starter.svg)](https://greenkeeper.io/)
+
 > 1 kB JavaScript micro-framework for building web applications -- [hyperapp](https://github.com/hyperapp/hyperapp)
 
 最吸引人的就是这句介绍了。
